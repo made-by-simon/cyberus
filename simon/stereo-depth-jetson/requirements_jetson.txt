@@ -1,0 +1,10 @@
+# Jetson Orin Nano — Python dependencies
+# OpenCV with contrib is provided by JetPack, but pip version can supplement it.
+# Install with: pip3 install -r requirements_jetson.txt
+
+# OpenCV contrib (provides ximgproc WLS filter)
+# NOTE: On JetPack, prefer the system-installed OpenCV for CUDA support.
+# Only install the pip version if system OpenCV doesn't have contrib modules.
+# opencv-contrib-python-headless==4.8.1.78   # uncomment ONLY if system OpenCV lacks ximgproc
+
+numpy>=1.24
