@@ -95,7 +95,28 @@ This will:
 
 ---
 
-## Step 3 — Identify your cameras (IMX219 CSI)
+## Step 3 — Enable IMX219 cameras (one-time, requires reboot)
+
+The IMX219 CSI cameras are disabled by default and must be enabled via a device tree overlay:
+
+```bash
+sudo /opt/nvidia/jetson-io/jetson-io.py
+```
+
+In the menu:
+1. Select **Configure Jetson 24pin CSI Connector**
+2. Enable **Camera IMX219 Dual**
+3. Save and reboot
+
+After reboot, verify the cameras are detected:
+```bash
+lsmod | grep imx219
+gst-launch-1.0 nvarguscamerasrc sensor-id=0 num-buffers=1 ! fakesink
+```
+
+---
+
+## Step 4 — Identify your cameras (IMX219 CSI)
 
 CSI cameras on the Jetson do **not** appear as standard `/dev/video*` V4L2 devices.
 They are accessed through the Argus/GStreamer stack (`nvarguscamerasrc`).
@@ -137,7 +158,7 @@ sudo apt install nvidia-l4t-multimedia gstreamer1.0-plugins-bad
 
 ---
 
-## Step 4 — (Recommended) Calibrate your stereo camera
+## Step 5 — (Recommended) Calibrate your stereo camera
 
 ### Calibration board
 
@@ -194,7 +215,7 @@ lines should be perfectly horizontal after good calibration.
 
 ---
 
-## Step 5 — Start the depth server on Jetson
+## Step 6 — Start the depth server on Jetson
 
 **IMX219 supported resolutions (use one of these):**
 
@@ -219,7 +240,7 @@ You should see log output like:
 
 ---
 
-## Step 6 — View on your PC
+## Step 7 — View on your PC
 
 Clone the repo on your PC if you haven't already:
 ```powershell
@@ -294,6 +315,9 @@ USB-C ethernet gadget supports ~40–100 Mbps — well above these rates.
 ---
 
 ## Troubleshooting
+
+**"No cameras available" / `modprobe: Module imx219 not found`**
+- The IMX219 device tree overlay hasn't been applied — run `sudo /opt/nvidia/jetson-io/jetson-io.py` and enable **Camera IMX219 Dual**, then reboot
 
 **"Cannot open CSI camera"**
 - CSI cameras do not appear as `/dev/video*` — they are accessed via GStreamer/Argus
