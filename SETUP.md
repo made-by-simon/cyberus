@@ -7,47 +7,32 @@ Dual IMX219 CSI Cameras (sensor-id 0 + 1, 60 mm baseline)
      │ (CSI)
      ▼
 Jetson Orin Nano
-  ├─ stereo_depth_server.py
+  ├─ jetson/stereo_depth_server.py
   │    ├─ Reads stereo frames
   │    ├─ Rectifies (if calibrated)
   │    ├─ SGBM disparity → metric depth
   │    ├─ Colourises (Turbo colourmap)
   │    └─ Streams JPEG over TCP :9999
      │
-     │ USB-C (USB ethernet gadget)  ─── OR ───  WiFi
+     │ USB-C (USB ethernet gadget)
      │ 192.168.55.1 (Jetson)
      ▼
 Your PC
-  └─ depth_viewer.py
+  └─ pc/depth_viewer.py
        ├─ Receives TCP stream
        └─ Displays left camera | depth map
 ```
 
 ---
 
-## Step 0 — Find your Jetson's IP on the USB interface
+## Step 0 — Connect to the Jetson over USB-C
 
-When connected over USB-C, Jetson Orin Nano (developer kit) runs a USB ethernet
-gadget that gives it a static IP **192.168.55.1** on your PC's side.
-
-On Windows, open *Device Manager → Network Adapters* and look for
-"Remote NDIS" or "USB Ethernet/RNDIS Gadget". Your PC gets **192.168.55.100**.
+The Jetson runs a USB ethernet gadget that gives it a static IP **192.168.55.1**.
+Your PC gets **192.168.55.100**.
 
 Confirm connectivity:
-```
+```powershell
 ping 192.168.55.1
-```
-
-SSH in:
-```
-ssh cyberus@192.168.55.1
-```
-
-If the USB network isn't appearing, check the Jetson's l4t-usb-device-mode service:
-```bash
-# On Jetson
-sudo systemctl status nv-l4t-usb-device-mode.service
-sudo systemctl enable --now nv-l4t-usb-device-mode.service
 ```
 
 ### Windows USB routing (one-time setup, run PowerShell as admin)
@@ -67,13 +52,29 @@ New-NetIPAddress -InterfaceIndex 4 -IPAddress 192.168.55.100 -PrefixLength 24
 route -p add 192.168.55.0 mask 255.255.255.0 0.0.0.0 IF 4
 ```
 
+SSH in:
+```powershell
+ssh cyberus@192.168.55.1
+```
+
+If the USB network isn't appearing, check the Jetson's USB device mode service:
+```bash
+sudo systemctl status nv-l4t-usb-device-mode.service
+sudo systemctl enable --now nv-l4t-usb-device-mode.service
+```
+
 ---
 
-## Step 1 — Copy project to Jetson
+## Step 1 — Clone the repo on the Jetson
 
-From your PC (git clone or scp):
 ```bash
-scp -rO .\stereo-depth-jetson\ cyberus@192.168.55.1:~/stereo-depth-jetson/
+ssh cyberus@192.168.55.1
+git clone https://github.com/made-by-simon/cyberus.git ~/simon
+```
+
+To update later:
+```bash
+cd ~/simon && git pull
 ```
 
 ---
@@ -81,8 +82,7 @@ scp -rO .\stereo-depth-jetson\ cyberus@192.168.55.1:~/stereo-depth-jetson/
 ## Step 2 — Run setup on Jetson
 
 ```bash
-ssh cyberus@192.168.55.1
-cd ~/stereo-depth-jetson
+cd ~/simon
 bash setup_jetson.sh
 ```
 
@@ -155,6 +155,7 @@ process; 640×480 loses sub-pixel precision.
 ### Run calibration on the Jetson
 
 ```bash
+cd ~/simon
 python3 jetson/calibrate_stereo.py \
     --mode separate \
     --camera-left 0 --camera-right 1 \
@@ -163,11 +164,6 @@ python3 jetson/calibrate_stereo.py \
     --square 30.0 \
     --output stereo_calib.npz
 ```
-
-> **CSI note:** the script opens each camera via a GStreamer pipeline
-> (`nvarguscamerasrc sensor-id=N`). If your script uses `--camera` instead of
-> `--camera-left`/`--camera-right`, pass `--camera 0` for left; the right camera
-> index is typically `1`.
 
 ### Capture tips for these cameras
 
@@ -206,6 +202,7 @@ lines should be perfectly horizontal after good calibration.
 
 ### Without calibration (uncalibrated, pseudo-depth from disparity):
 ```bash
+cd ~/simon
 python3 jetson/stereo_depth_server.py \
     --mode separate \
     --camera-left 0 --camera-right 1 \
@@ -215,6 +212,7 @@ python3 jetson/stereo_depth_server.py \
 
 ### With calibration (metric depth in metres):
 ```bash
+cd ~/simon
 python3 jetson/stereo_depth_server.py \
     --mode separate \
     --camera-left 0 --camera-right 1 \
@@ -250,18 +248,20 @@ You should see log output like:
 
 ## Step 6 — View on your PC
 
+Clone the repo on your PC if you haven't already:
+```powershell
+git clone https://github.com/made-by-simon/cyberus.git
+cd cyberus
+```
+
 Install PC dependencies (one time):
-```bash
+```powershell
 pip install -r requirements_pc.txt
 ```
 
 Run the viewer:
-```bash
-# USB-C connection (default Jetson USB gadget IP)
+```powershell
 python pc/depth_viewer.py 192.168.55.1
-
-# WiFi
-python pc/depth_viewer.py 192.168.1.42
 ```
 
 **Controls:**
@@ -276,7 +276,7 @@ python pc/depth_viewer.py 192.168.1.42
 
 ## Tuning depth quality
 
-Edit these flags in `stereo_depth_server.py` or pass as CLI args:
+Edit these flags in `jetson/stereo_depth_server.py` or pass as CLI args:
 
 | Parameter | Effect |
 |---|---|
@@ -317,7 +317,6 @@ For higher FPS at good quality, reduce resolution: `--width 320 --height 240`
 | 320×240 @ 25 FPS, quality 75 | ~1–2 Mbps |
 
 USB-C ethernet gadget supports ~40–100 Mbps — well above these rates.
-WiFi (2.4 GHz) supports ~20–50 Mbps — also fine.
 
 ---
 
@@ -332,7 +331,7 @@ WiFi (2.4 GHz) supports ~20–50 Mbps — also fine.
 - Reduce resolution: `--width 320 --height 240`
 
 **Depth looks like noise**
-- Camera not calibrated — run `calibrate_stereo.py` first
+- Camera not calibrated — run `jetson/calibrate_stereo.py` first
 - Untextured surfaces (plain walls) are inherently hard for stereo — add texture or lighting
 
 **Depth range wrong**
@@ -344,5 +343,4 @@ WiFi (2.4 GHz) supports ~20–50 Mbps — also fine.
 - Confirm you can ping the Jetson: `ping 192.168.55.1`
 
 **USB network not appearing on PC (Windows)**
-- Install RNDIS driver if prompted
-- Or use USB network sharing: Settings → Network → USB
+- See Windows USB routing setup in Step 0

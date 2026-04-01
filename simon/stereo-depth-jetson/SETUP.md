@@ -69,11 +69,18 @@ route -p add 192.168.55.0 mask 255.255.255.0 0.0.0.0 IF 4
 
 ---
 
-## Step 1 — Copy project to Jetson
+## Step 1 — Clone the repo on the Jetson
 
-From your PC (git clone or scp):
+SSH into the Jetson, then clone the repo:
+
 ```bash
-scp -rO .\stereo-depth-jetson\ cyberus@192.168.55.1:~/stereo-depth-jetson/
+ssh cyberus@192.168.55.1
+git clone https://github.com/made-by-simon/cyberus.git ~/simon
+```
+
+To update later:
+```bash
+cd ~/simon && git pull
 ```
 
 ---
@@ -81,8 +88,7 @@ scp -rO .\stereo-depth-jetson\ cyberus@192.168.55.1:~/stereo-depth-jetson/
 ## Step 2 — Run setup on Jetson
 
 ```bash
-ssh cyberus@192.168.55.1
-cd ~/stereo-depth-jetson
+cd ~/simon/stereo-depth-jetson
 bash setup_jetson.sh
 ```
 
