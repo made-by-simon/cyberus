@@ -200,41 +200,9 @@ lines should be perfectly horizontal after good calibration.
 | 820×616 | 60 | Fast/embedded |
 | 640×480 | 60 | Cropped, lowest latency |
 
-### Without calibration (uncalibrated, pseudo-depth from disparity):
 ```bash
 cd ~/simon
-python3 jetson/stereo_depth_server.py \
-    --mode separate \
-    --camera-left 0 --camera-right 1 \
-    --width 1640 --height 1232 \
-    --fps 30
-```
-
-### With calibration (metric depth in metres):
-```bash
-cd ~/simon
-python3 jetson/stereo_depth_server.py \
-    --mode separate \
-    --camera-left 0 --camera-right 1 \
-    --calibration stereo_calib.npz \
-    --width 1640 --height 1232 \
-    --fps 30 \
-    --max-depth 5.0
-```
-
-> **Baseline note:** With 60 mm baseline the IMX219 pair gives reliable depth
-> from ~0.3 m to ~5 m. Set `--max-depth` accordingly; beyond 5 m disparity
-> becomes sub-pixel and noise dominates.
-
-### With CUDA acceleration (faster, ~2-3× FPS, but less accurate than SGBM):
-```bash
-python3 jetson/stereo_depth_server.py \
-    --mode separate \
-    --camera-left 0 --camera-right 1 \
-    --calibration stereo_calib.npz \
-    --width 1640 --height 1232 \
-    --cuda \
-    --fps 40
+python3 jetson/stereo_depth_server.py --left 0 --right 1 --width 1640 --height 1232 --fps 30
 ```
 
 You should see log output like:

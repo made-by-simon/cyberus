@@ -27,7 +27,7 @@ cyberus/
    ```
 3. Start the depth server on the Jetson:
    ```bash
-   python3 jetson/stereo_depth_server.py --mode separate --camera-left 0 --camera-right 1 --width 1640 --height 1232 --fps 30
+   python3 jetson/stereo_depth_server.py --left 0 --right 1 --width 1640 --height 1232 --fps 30
    ```
 4. Run the viewer on your PC:
    ```powershell

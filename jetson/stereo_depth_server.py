@@ -65,19 +65,24 @@ class StereoDepthServer:
         self.running = False
 
     def _open_cameras(self):
-        def open_cam(idx: int) -> cv2.VideoCapture:
-            cap = cv2.VideoCapture(idx, cv2.CAP_V4L2)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH,  self.args.width)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.args.height)
-            cap.set(cv2.CAP_PROP_FPS,          self.args.fps)
-            cap.set(cv2.CAP_PROP_BUFFERSIZE,   1)
+        def gst_pipeline(sensor_id: int) -> str:
+            return (
+                f"nvarguscamerasrc sensor-id={sensor_id} ! "
+                f"video/x-raw(memory:NVMM),width={self.args.width},height={self.args.height},"
+                f"framerate={self.args.fps}/1 ! "
+                f"nvvidconv ! video/x-raw,format=BGRx ! "
+                f"videoconvert ! video/x-raw,format=BGR ! appsink drop=1"
+            )
+
+        def open_cam(sensor_id: int) -> cv2.VideoCapture:
+            cap = cv2.VideoCapture(gst_pipeline(sensor_id), cv2.CAP_GSTREAMER)
             if not cap.isOpened():
-                raise RuntimeError(f"Cannot open /dev/video{idx}")
+                raise RuntimeError(f"Cannot open CSI camera sensor-id={sensor_id}")
             return cap
 
         self.left_cap  = open_cam(self.args.left)
         self.right_cap = open_cam(self.args.right)
-        log.info(f"Cameras opened: /dev/video{self.args.left}, /dev/video{self.args.right}")
+        log.info(f"Cameras opened: sensor-id={self.args.left}, sensor-id={self.args.right}")
 
     def _accept_loop(self, srv: socket.socket):
         srv.listen(8)
