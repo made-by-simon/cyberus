@@ -86,7 +86,12 @@ cd ~/simon
 bash setup_jetson.sh
 ```
 
-This installs dependencies and (optionally) creates a systemd service.
+This will:
+- Install system packages
+- Remove any pip-installed OpenCV (the JetPack system OpenCV is required for GStreamer/CSI camera support)
+- Install Python deps with `numpy<2` (system OpenCV was built against NumPy 1.x)
+- Enable `nvargus-daemon` (required for CSI cameras)
+- Optionally install a systemd service to auto-start on boot
 
 ---
 
@@ -290,9 +295,12 @@ USB-C ethernet gadget supports ~40–100 Mbps — well above these rates.
 
 ## Troubleshooting
 
-**"Cannot open camera"**
-- Check `ls /dev/video*` and use correct `--camera` index
-- Ensure you're in the `video` group: `sudo usermod -aG video $USER` then re-login
+**"Cannot open CSI camera"**
+- CSI cameras do not appear as `/dev/video*` — they are accessed via GStreamer/Argus
+- Ensure `nvargus-daemon` is running: `sudo systemctl start nvargus-daemon`
+- Ensure OpenCV has GStreamer support: `python3 -c "import cv2; print(cv2.getBuildInformation())" | grep GStreamer`
+- If GStreamer shows NO, pip OpenCV is still active: `pip3 uninstall opencv-python opencv-python-headless -y`
+- If OpenCV fails to import with a NumPy error: `pip3 install "numpy<2"`
 
 **Low FPS / high CPU**
 - Add `--no-wls` or `--cuda` or reduce `--num-disparities`
