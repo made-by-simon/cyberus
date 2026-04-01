@@ -121,6 +121,7 @@ class StereoDepthServer:
 
         srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         srv.bind((self.args.host, self.args.port))
 
         self.running = True
