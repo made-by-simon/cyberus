@@ -1,0 +1,5 @@
+# PC (Windows/Linux/Mac) — Python dependencies
+# Install with: pip install -r requirements_pc.txt
+
+opencv-python>=4.8
+numpy>=1.24
