@@ -1,9 +1,0 @@
-# Jetson Orin Nano — Python dependencies
-# Install with: pip3 install -r requirements_jetson.txt
-#
-# PyTorch: use NVIDIA's JetPack-provided wheel, NOT the pip version.
-# Verify it's installed: python3 -c "import torch; print(torch.__version__)"
-# If missing, get the correct wheel from https://developer.nvidia.com/embedded/downloads
-
-numpy>=1.24
-timm>=0.9        # required by MiDaS
